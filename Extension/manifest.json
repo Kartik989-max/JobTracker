@@ -1,0 +1,26 @@
+{
+    "manifest_version": 3,
+    "name": "Job Application Tracker",
+    "version": "1.0",
+    "description": "Track job applications automatically and sync with your dashboard.",
+    "permissions": [
+      "scripting",
+      "activeTab",
+      "storage"
+    ],
+    "host_permissions": [
+      "*://*.linkedin.com/*",
+      "*://*.indeed.com/*",
+      "*://*.internshala.com/*"
+    ],
+    "content_scripts": [
+      {
+        "matches": ["*://*.linkedin.com/*", "*://*.indeed.com/*", "*://*.internshala.com/*"],
+        "js": ["content.js"]
+      }
+    ],
+    "action": {
+      "default_popup": "popup.html"
+    }
+  }
+  
