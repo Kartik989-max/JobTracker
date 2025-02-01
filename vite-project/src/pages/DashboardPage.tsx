@@ -100,22 +100,22 @@ const DashboardPage: React.FC = () => {
 
   const openModal = () => {
     setIsModalOpen(true);
-};
+  };
 
-const closeModal = () => {
+  const closeModal = () => {
     setIsModalOpen(false);
     setEditingJobId(null);
     setFormData({
-        CompanyName: "",
-        JobTitle: "",
-        Status: Status.Applied,
-        AppliedDate: ""
+      CompanyName: "",
+      JobTitle: "",
+      Status: Status.Applied,
+      AppliedDate: "",
     });
-};
+  };
 
   const handelEdit = async (job: Job) => {
     setFormData({
-      CompanyName:job.CompanyName,
+      CompanyName: job.CompanyName,
       JobTitle: job.JobTitle,
       Status: job.Status,
       AppliedDate: job.AppliedDate,
@@ -140,47 +140,63 @@ const closeModal = () => {
     }
   };
 
-  const filteredJobs = filterStatus ? jobs.filter((job) => job.Status === filterStatus): jobs;
+  const filteredJobs = filterStatus
+    ? jobs.filter((job) => job.Status === filterStatus)
+    : jobs;
+
+  const showRecommendationJob = async () => {
+    console.log("hhhhola");
+    try {
+      const response = await axios.get("http://localhost:5000/fetchJob");
+      if (response.status == 200) {
+        console.log(response);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleJobSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      if(editingJobId){
-        const response = await axios.put(`http://localhost:5000/editJob/${editingJobId}`, FormData);
-        if(response.status ===201){
-          toast.success('Job Updated Successfully');
+      if (editingJobId) {
+        const response = await axios.put(
+          `http://localhost:5000/editJob/${editingJobId}`,
+          FormData
+        );
+        if (response.status === 201) {
+          toast.success("Job Updated Successfully");
           setEditingJobId(null);
-          setTimeout(() => {  
-          closeModal();
-          fetchJobs();
+          setTimeout(() => {
+            closeModal();
+            fetchJobs();
           }, 1000);
         }
-      }
-      else{
+      } else {
         const data = {
           ...FormData,
           email: userEmail,
         };
-      const response = await axios.post(
-        "http://localhost:5000/jobCreate",
-        data
-      );
-      if (response.status === 201) {
-        setTimeout(() => {
-          fetchJobs();
-        }, 500);
-        setFormData({
-          CompanyName: "",
-          JobTitle: "",
-          Status: Status.Applied,
-          AppliedDate: "",
-        });
-        console.log("Job Created");
-        toast.success("Job Created Successfully!");
+        const response = await axios.post(
+          "http://localhost:5000/jobCreate",
+          data
+        );
+        if (response.status === 201) {
+          setTimeout(() => {
+            fetchJobs();
+          }, 500);
+          setFormData({
+            CompanyName: "",
+            JobTitle: "",
+            Status: Status.Applied,
+            AppliedDate: "",
+          });
+          console.log("Job Created");
+          toast.success("Job Created Successfully!");
+        }
+        console.log(FormData);
+        closeModal();
       }
-      console.log(FormData);
-      closeModal();
-    }
     } catch (err) {
       console.log("Error", err);
       toast.error("Job Not Created!");
@@ -297,52 +313,53 @@ const closeModal = () => {
         <Bar data={chartData} />
       </div>
 
-        <Modal 
+      <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel="Edit Job"
-        >
-          <h2>{editingJobId ? 'Edit Job' : 'Add Job'}</h2>
-          <form onSubmit={handleJobSubmit}>
-            <Input
-              value={FormData.CompanyName}
-              onChange={handleChange}
-              name="CompanyName"
-              placeholder="Company Name"
-            />
-            <Input
-              onChange={handleChange}
-              name="JobTitle"
-              value={FormData.JobTitle}
-              placeholder="Job Title"
-            />
-            <Input
-              onChange={handleChange}
-              name="Status"
-              value={FormData.Status}
-              placeholder="Job Status"
-            />
-            <select
-              name="Status"
-              className="text-white"
-              value={FormData.Status}
-              onChange={handleChange}
-            >
-              <option value={Status.Applied}>Applied</option>
-              <option value={Status.Interviewed}>Interviewed</option>
-              <option value={Status.Review}>Review</option>
-            </select>
-            <Input
-              onChange={handleChange}
-              name="AppliedDate"
-              value={FormData.AppliedDate}
-              type="date"
-              placeholder="Applied Date"
-            />
-            <Button type="submit">{editingJobId ? 'Edit Job' : 'Add Job'}</Button>
-          </form>
-        </Modal>
+      >
+        <h2>{editingJobId ? "Edit Job" : "Add Job"}</h2>
+        <form onSubmit={handleJobSubmit}>
+          <Input
+            value={FormData.CompanyName}
+            onChange={handleChange}
+            name="CompanyName"
+            placeholder="Company Name"
+          />
+          <Input
+            onChange={handleChange}
+            name="JobTitle"
+            value={FormData.JobTitle}
+            placeholder="Job Title"
+          />
+          <Input
+            onChange={handleChange}
+            name="Status"
+            value={FormData.Status}
+            placeholder="Job Status"
+          />
+          <select
+            name="Status"
+            className="text-white"
+            value={FormData.Status}
+            onChange={handleChange}
+          >
+            <option value={Status.Applied}>Applied</option>
+            <option value={Status.Interviewed}>Interviewed</option>
+            <option value={Status.Review}>Review</option>
+          </select>
+          <Input
+            onChange={handleChange}
+            name="AppliedDate"
+            value={FormData.AppliedDate}
+            type="date"
+            placeholder="Applied Date"
+          />
+          <Button type="submit">{editingJobId ? "Edit Job" : "Add Job"}</Button>
+        </form>
+      </Modal>
 
+      <button onClick={() => showRecommendationJob()}>Recomendtion</button>
     </div>
   );
 };

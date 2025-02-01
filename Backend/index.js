@@ -10,6 +10,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const secretKey = process.env.JWT_SECRET_KEY;
 const job = require("./models/job");
+const fetchJob = require("./service/fetch_job");
 
 
 // Middleware
@@ -178,6 +179,12 @@ app.post("/jobCreate", async (req, res) => {
     console.error("Error during job creation:", error);
     res.status(500).send({ message: "Job Creation failed" });
   }
+});
+
+app.get('/fetchJob',async (req,res)=>{
+  const jobb =await fetchJob();
+  console.log(jobb);
+  res.status(200).send(jobb);
 });
 
 app.listen(port, () => {
