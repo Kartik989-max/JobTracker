@@ -1,2 +1,113 @@
 /backend/.env
 /backend/.env.*
+
+
+
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPreferenceModalOpen, setIsPreferenceModalOpen] = useState(false);
+  const [preferenceData, setPreferenceData] = useState<JobPreferenceForm>({
+    keyword: "",
+    salary: "",
+    location: "",
+  });
+
+  const fetchRecommendedJobs = async (preference: JobPreferenceForm) => {
+    try {
+      const response = await axios.post("http://localhost:5000/recommendedJob", preference);
+      setRecommendedJobs(response.data);
+    } catch (err) {
+      console.log("Error fetching recommended jobs", err);
+    }
+  };
+  const handlePreferenceChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setPreferenceData({ ...preferenceData, [name]: value });
+  };
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingJobId(null);
+    setFormData({
+      CompanyName: "",
+      JobTitle: "",
+      Status: Status.Applied,
+      AppliedDate: "",
+    });
+  };
+
+  const openPreferenceModal = () => {
+    setIsPreferenceModalOpen(true);
+  };
+
+  const closePreferenceModal = () => {
+    setIsPreferenceModalOpen(false);
+    setPreferenceData({
+      keyword: "",
+      salary: "",
+      location: "",
+    });
+  };
+
+  const handlePreferenceSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    fetchRecommendedJobs(preferenceData);
+    closePreferenceModal();
+  };
+
+
+      <div>
+        <h3>Recommended Jobs</h3>
+        {recommendedJobs.length > 0 ? (
+          recommendedJobs.map((job: Job, index: number) => (
+            <div className="flex gap-2" key={index}>
+              <h3>{job.CompanyName}</h3>
+              <p>{job.JobTitle}</p>
+              <p>{job.AppliedDate}</p>
+              <p>{job.Status}</p>
+            </div>
+          ))
+        ) : (
+          <p>No recommended jobs found</p>
+        )}
+      </div>
+
+      <Modal
+        isOpen={isPreferenceModalOpen}
+        onRequestClose={closePreferenceModal}
+        contentLabel="Job Preference"
+      >
+        <h2>Job Preference</h2>
+        <form onSubmit={handlePreferenceSubmit}>
+          <Input
+            value={preferenceData.keyword}
+            onChange={handlePreferenceChange}
+            name="keyword"
+            placeholder="Job Keyword"
+          />
+          <Input
+            value={preferenceData.salary}
+            onChange={handlePreferenceChange}
+            name="salary"
+            placeholder="Salary"
+          />
+          <Input
+            value={preferenceData.location}
+            onChange={handlePreferenceChange}
+            name="location"
+            placeholder="Location"
+          />
+          <Button type="submit">Submit</Button>
+        </form>
+      </Modal>
+
+      <Button onClick={openPreferenceModal}>Set Job Preferences</Button>
+    </div>
+  );
+};

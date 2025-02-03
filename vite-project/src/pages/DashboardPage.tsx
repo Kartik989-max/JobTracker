@@ -24,6 +24,7 @@ ChartJS.register(
   Legend
 );
 import Modal from "react-modal";
+import Analyser from "@/components/Analyser/Analyser";
 Modal.setAppElement("#root");
 
 enum Status {
@@ -45,6 +46,22 @@ interface Job {
   AppliedDate: string;
   email: string;
 }
+enum jobType{
+  partTime='Part Time',
+  fullTime='Full Time',
+}
+interface JobPreferenceForm{
+  position:string,
+  location:string,
+  jobType:jobType,
+}
+interface recommendedJobs{
+  company: string;
+  position: string;
+  jobType: string;
+  salary: number;
+  jobUrl: string;
+}
 const DashboardPage: React.FC = () => {
   const [FormData, setFormData] = useState<JobCreateForm>({
     CompanyName: "",
@@ -56,12 +73,21 @@ const DashboardPage: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filterStatus, setFilterStatus] = useState<Status | "">("");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  
   const username = user.username || "Guest";
   const [error, setError] = useState<string | null>(null);
   const userEmail = user.email || "Guest";
   const navigate = useNavigate();
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [recommendedJobs, setRecommendedJobs]=useState<recommendedJobs[]>([]);
+  const [isPreferenceModalOpen,setIsPreferenceModalOpen]=useState(false);
+  const [preferenceData,setPreferenceData]=useState<JobPreferenceForm>({
+    position:'',
+    location:'',
+    jobType:jobType.partTime,
+  })
 
   const fetchJobs = async () => {
     try {
@@ -144,17 +170,41 @@ const DashboardPage: React.FC = () => {
     ? jobs.filter((job) => job.Status === filterStatus)
     : jobs;
 
-  const showRecommendationJob = async () => {
-    console.log("hhhhola");
+
+  const showRecommendationJob = async (preference:JobPreferenceForm) => {
+
     try {
-      const response = await axios.get("http://localhost:5000/fetchJob");
+      const response = await axios.post("http://localhost:5000/recommendedJob", preference);
       if (response.status == 200) {
-        console.log(response);
+        localStorage.setItem('preferenceToken',response.data.token);
+        localStorage.setItem('preferenceTokenData', JSON.stringify(preference));
+        setRecommendedJobs(response.data.recommendJobs);
+        console.log(response.data.recommendJobs);
+        
+        toast.success("Preferences saved successfully!");
       }
+      
     } catch (error) {
       console.log(error);
+      toast.error("Failed to save preference!");
     }
   };
+
+ 
+    useEffect(() => {
+      const prefercenToken = JSON.parse(localStorage.getItem("preferenceTokenData") || "{}");
+      if(prefercenToken.position!= undefined){
+        // setPreferenceData({
+        //   position: prefercenToken.position,
+        //   location: prefercenToken.location,
+        //   jobType:jobType.fullTime,
+        // });
+        console.log(prefercenToken.position);
+        showRecommendationJob(prefercenToken);
+      }
+       }, []);
+ 
+  
 
   const handleJobSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -202,6 +252,32 @@ const DashboardPage: React.FC = () => {
       toast.error("Job Not Created!");
       setError("Failed to create job");
     }
+  };
+
+  const handlePreferenceChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setPreferenceData({ ...preferenceData, [name]: value });
+  };
+
+  const openPreferenceModal = () => {
+    setIsPreferenceModalOpen(true);
+  };
+
+  const closePreferenceModal = () => {
+    setIsPreferenceModalOpen(false);
+    setPreferenceData({
+      position: "",
+      location: "",
+      jobType:jobType.fullTime,
+    });
+  };
+
+  const handlePreferenceSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    showRecommendationJob(preferenceData);
+    closePreferenceModal();
   };
 
   const jobCountsByDate = jobs.reduce((acc: { [key: string]: number }, job) => {
@@ -359,7 +435,73 @@ const DashboardPage: React.FC = () => {
         </form>
       </Modal>
 
-      <button onClick={() => showRecommendationJob()}>Recomendtion</button>
+
+
+
+{/* recommended Job  */}
+
+
+        <Modal
+        isOpen={isPreferenceModalOpen}
+        onRequestClose={closePreferenceModal}
+        contentLabel="Job Preference"
+        >
+          <h2>Job Preference</h2>
+          <form onSubmit={handlePreferenceSubmit}>
+            <Input value={preferenceData.position}
+              onChange={handlePreferenceChange}
+              name="position"
+              placeholder="Job Position"
+            />
+          <Input
+            value={preferenceData.location}
+            onChange={handlePreferenceChange}
+            name="location"
+            placeholder="Location"
+          />
+          <Input
+            value={preferenceData.jobType}
+            onChange={handlePreferenceChange}
+            name="jobType"
+            placeholder="Job Type"
+          />
+          <select
+            name="jobType"
+            className="text-white"
+            value={preferenceData.jobType}
+            onChange={handlePreferenceChange}
+          >
+            <option value={jobType.fullTime}>Full Time</option>
+            <option value={jobType.partTime}>Part Time</option>
+          </select>
+      <button type="submit" className="text-white" onClick={() => showRecommendationJob(preferenceData)}>Recomendtion</button>
+          </form>
+        </Modal>
+
+        <Button onClick={openPreferenceModal}>Set Job Preferences</Button>
+
+        
+        <div>
+        <h3>Recommended Jobs</h3>
+        {recommendedJobs.length > 0 ? (
+          recommendedJobs.map((job: recommendedJobs, index: number) => (
+            <div className="flex gap-2" key={index}>
+              <h3>{job.company}</h3>
+              <p>{job.position}</p>
+              <a href={`${job.jobUrl}`}>
+              <button>Lol</button>
+              </a>
+              {/* <p>{job.jobUrl}</p> */}
+              <p>{job.jobType}</p>
+
+            </div>
+          ))
+        ) : (
+          <p>No recommended jobs found</p>
+        )}
+      </div>
+<Analyser/>
+
     </div>
   );
 };

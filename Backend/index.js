@@ -11,7 +11,8 @@ const bcrypt = require("bcryptjs");
 const secretKey = process.env.JWT_SECRET_KEY;
 const job = require("./models/job");
 const fetchJob = require("./service/fetch_job");
-
+const multer = require('multer');
+const analyzeResume = require('./service/job_analyser')
 
 // Middleware
 app.use(cors());
@@ -181,21 +182,63 @@ app.post("/jobCreate", async (req, res) => {
   }
 });
 
-app.get('/fetchJob',async (req,res)=>{
-  const jobb =await fetchJob();
-  console.log(jobb);
-  res.status(200).send(jobb);
+app.post('/recommendedJob',async (req,res)=>{
+  const {position,location,jobType}=req.body;
+  console.log(req.body);
+  
+  const recommendJobs =await fetchJob(position,location,jobType);
+  try {
+    if(recommendJobs.length>0){
+      console.log('fetched job');  
+      // res.status(200).json(recommendJobs);
+      const token = jwt.sign({ position:position }, secretKey,{expiresIn:'1h'});
+      res.status(200).send({recommendJobs,token,preferenceJobs:{
+        position:position,
+      }});
+    }
+    else{
+      console.log('No job Found');
+      res.status(404).json({message:'No job Found'});
+    }
+  } catch (error) {
+    console.log('Error in fetching jobs:',error);
+    res.status(400).json({message:'Error in fetching job'})  
+  }
 });
+
+
+
+const upload = multer({ dest: "uploads/" });
+
+// API to analyze resume (file) & job description (text)
+app.post("/analyzeResume", upload.single("resume"), async (req, res) => {  
+    try {
+        const resumeFile = req.file;
+        const jobDescriptionText = req.body.jobDescription; // Job description as text
+
+        if (!resumeFile || !jobDescriptionText) {
+            return res.status(400).json({ message: "Resume file and job description text are required" });
+        }
+
+        const result = await analyzeResume(resumeFile.path, jobDescriptionText);
+        console.log(result);
+        
+        if (result.error) {
+            return res.status(400).json({ message: result.error });
+        }
+
+        res.json({ "ATS Score": result.atsScore, message: result.message });
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+
+
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
 
-// async function handleUserSignUp(req,res){
-//     const {username,email,password} = req.body;
-//     await User.create({
-//         username,email,password
-//     })
-//     console.log("User created");
-
-// }
