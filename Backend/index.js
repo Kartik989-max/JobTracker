@@ -13,7 +13,7 @@ const job = require("./models/job");
 const fetchJob = require("./service/fetch_job");
 const multer = require('multer');
 const analyzeResume = require('./service/job_analyser')
-
+const path=require('path');
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -207,15 +207,26 @@ app.post('/recommendedJob',async (req,res)=>{
 });
 
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+      cb(null, "uploads/"); // Directory where files will be stored
+  },
+  filename: (req, file, cb) => {
+      // Save with original name and extension
+      cb(null, Date.now() + path.extname(file.originalname)); // Adds timestamp to the original file name
+  }
+});
 
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ storage: storage });
 
 // API to analyze resume (file) & job description (text)
 app.post("/analyzeResume", upload.single("resume"), async (req, res) => {  
     try {
         const resumeFile = req.file;
+        
         const jobDescriptionText = req.body.jobDescription; // Job description as text
-
+        console.log(resumeFile.path);
+        
         if (!resumeFile || !jobDescriptionText) {
             return res.status(400).json({ message: "Resume file and job description text are required" });
         }
@@ -228,7 +239,9 @@ app.post("/analyzeResume", upload.single("resume"), async (req, res) => {
         }
 
         res.json({ "ATS Score": result.atsScore, message: result.message });
-    } catch (error) {
+    
+    }
+     catch (error) {
         console.error("Error:", error);
         res.status(500).json({ message: "Server error" });
     }

@@ -28,11 +28,9 @@ const Analyser: React.FC = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post<{ "ATS Score": number }>(
-                "http://localhost:5000/analyzeResume",
-                formData,
-                { headers: { "Content-Type": "multipart/form-data" } }
-            );
+            const response = await axios.post("http://localhost:5000/analyzeResume",formData,{ headers: { "Content-Type": "multipart/form-data" } });
+            console.log('og');
+            
 
             setScore(response.data["ATS Score"]);
         } catch (error) {
@@ -46,7 +44,7 @@ const Analyser: React.FC = () => {
         <div>
             <h2>Job Application Analyzer</h2>
             <form onSubmit={handleSubmit}>
-                <input type="file" accept=".pdf,.docx" onChange={handleFileChange} required />
+                <input type="file" name="resume" accept=".pdf,.docx" onChange={handleFileChange} required />
                 <textarea
                     rows={5}
                     placeholder="Paste job description here..."

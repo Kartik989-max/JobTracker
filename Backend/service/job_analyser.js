@@ -7,7 +7,7 @@ const natural = require("natural");
 // Function to extract text from PDF/DOCX
 const extractText = async (filePath) => {
     const fileExt = path.extname(filePath).toLowerCase();
-    console.log('fileext',fileExt);
+    console.log('fileext',filePath);
     
     if (fileExt === ".pdf") {
         const dataBuffer = fs.readFileSync(filePath);
@@ -50,6 +50,7 @@ const analyzeResume = async (resumeFilePath, jobDescriptionText) => {
     try {
         // Extract text from resume
         const resumeText = await extractText(resumeFilePath);
+        console.log(resumeText);
         
         // Delete the uploaded file after processing
         fs.unlinkSync(resumeFilePath);
