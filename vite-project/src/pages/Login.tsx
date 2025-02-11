@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
+
 interface LoginForm {
     email: string;
     password: string;
@@ -52,8 +53,11 @@ const LoginPage: React.FC = () => {
     };
 
     return (
+       
+
         <div>
             <h1>Login</h1>
+           
             <form onSubmit={handleSubmit}>
                 <div>
                     <label htmlFor="email">Email:</label>
@@ -64,7 +68,7 @@ const LoginPage: React.FC = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                    />
+                        />
                 </div>
                 <div>
                     <label htmlFor="password">Password:</label>
@@ -75,12 +79,13 @@ const LoginPage: React.FC = () => {
                         value={formData.password}
                         onChange={handleChange}
                         required
-                    />
+                        />
                 </div>
                 <Button   type="submit">Login</Button>
             </form>
             {error && <p style={{ color: 'red' }}>{error}</p>}
         </div>
+                  
     );
 };
 
